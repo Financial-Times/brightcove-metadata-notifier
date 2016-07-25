@@ -107,7 +107,7 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	}
 	defer cleanupResp(resp)
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Sending metadata to notifier: unexpected response: [%d]", resp.StatusCode)
+		return fmt.Errorf("Sending metadata to notifier: unexpected status code: [%d]", resp.StatusCode)
 	}
 	return nil
 }

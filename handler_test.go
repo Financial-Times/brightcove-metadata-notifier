@@ -2,9 +2,13 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -78,5 +82,87 @@ func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.
 }
 
 func TestSendMetadata_RequestHeadersAreSet(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Content-type") != "application/json" {
+			t.Errorf("Expected [application/json], found: [%s]", r.Header.Get("Content-type"))
+		}
+		if r.Host != "metadata-notifier" {
+			t.Errorf("Expected [metadata-notifier] host header, found: [%s]", r.Host)
+		}
+	}))
+	mm := metadataMapper{
+		config: &config{
+			cmsMetadataNotifierAddr: ts.URL,
+			cmsMetadataNotifierHost: "metadata-notifier",
+		},
+		client: &http.Client{},
+	}
 
+	mm.sendMetadata([]byte(""), "test_tid")
+}
+
+func TestSendMetadata_RequestBodyIsExpected(t *testing.T) {
+	testMsg := "this is a test metadata msg"
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqBody, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("Unexpected error: [%v]", err)
+		}
+		if string(reqBody) != testMsg {
+			t.Errorf("Expected: [%s]. Actual: [%s]", testMsg, string(reqBody))
+		}
+	}))
+	mm := metadataMapper{
+		config: &config{
+			cmsMetadataNotifierAddr: ts.URL,
+		},
+		client: &http.Client{},
+	}
+
+	mm.sendMetadata([]byte(testMsg), "test_tid")
+}
+
+func TestSendMetadata_ExecutingHTTPRequestResultsInErr_ErrAndMsgIsExpected(t *testing.T) {
+	mm := metadataMapper{
+		config: &config{
+			cmsMetadataNotifierAddr: "http://localhost:8080/notify",
+			cmsMetadataNotifierHost: "cms-metadata-notifier",
+		},
+		client: &http.Client{
+			Transport: &http.Transport{
+				Proxy: func(req *http.Request) (*url.URL, error) {
+					return nil, fmt.Errorf("Test scenarios with error")
+				},
+			},
+		},
+	}
+
+	err := mm.sendMetadata([]byte(""), "test_tid")
+	if err == nil {
+		t.Errorf("Expected error.")
+	}
+	if !strings.Contains(err.Error(), "Sending metadata to notifier") {
+		t.Errorf("Unexpected err msg: [%s]", err.Error())
+	}
+}
+
+func TestSendMetadata_NonHealhtyStatusCodeReceived_ErrAndMsgIsExpected(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(418)
+	}))
+	mm := metadataMapper{
+		config: &config{
+			cmsMetadataNotifierAddr: ts.URL,
+		},
+		client: &http.Client{},
+	}
+
+	err := mm.sendMetadata([]byte(""), "test_tid")
+	if err == nil {
+		t.Errorf("Expected error.")
+	}
+	if !strings.Contains(err.Error(), "unexpected status code") {
+		t.Errorf("Unexpected err msg: [%s]", err.Error())
+	}
 }
