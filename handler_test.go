@@ -46,7 +46,7 @@ func TestHandleNotification_RequestBodyValidation_CorrectStatusCodeReturned(t *t
 	}
 }
 
-func TestCreateNativeCmsPublicationEvent_CreatedEventMatchesExpectedEvent(t *testing.T) {
+func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.T) {
 	video := video{
 		UUID: "1234",
 		Tags: []string{"Emerging-Markets", "Commodities"},
@@ -68,7 +68,7 @@ func TestCreateNativeCmsPublicationEvent_CreatedEventMatchesExpectedEvent(t *tes
 		},
 	}
 
-	actual, err := mm.createNativeCmsMetadataPublicationEvent(video, "unit-test")
+	actual, err := mm.createMetadataPublishEventMsg(video, "unit-test")
 	if err != nil {
 		t.Errorf("Expected no error. Found: [%v]", err)
 	}

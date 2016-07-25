@@ -42,7 +42,7 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	ev, err := mm.createNativeCmsMetadataPublicationEvent(v, tid)
+	ev, err := mm.createMetadataPublishEventMsg(v, tid)
 	if err != nil {
 		handleServerErr(w, fmt.Sprintf("tid=[%s]. %v", tid, err))
 		return
@@ -58,7 +58,7 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (mm metadataMapper) createNativeCmsMetadataPublicationEvent(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
+func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
 	marshalled, err := xml.Marshal(buildContentRef(v.UUID, mm.getAnnotations(v.Tags, tid), tid))
 	if err != nil {
 		return nil, fmt.Errorf("XML Marshalling: [%v]", tid, err)
