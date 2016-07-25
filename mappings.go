@@ -19,7 +19,7 @@ func fetchMappings(mappingURL string) map[string]term {
 	if err != nil {
 		errorLogger.Panicf("Couldn't fetch mappings: [%#v]", err)
 	}
-	defer resp.Body.Close()
+	defer cleanupResp(resp)
 	if resp.StatusCode != 200 {
 		errorLogger.Panicf("Unhealthy status code received: [%v]", resp.StatusCode)
 	}

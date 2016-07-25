@@ -61,7 +61,7 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
 	marshalled, err := xml.Marshal(buildContentRef(v.UUID, mm.getAnnotations(v.Tags, tid), tid))
 	if err != nil {
-		return nil, fmt.Errorf("XML Marshalling: [%v]", tid, err)
+		return nil, fmt.Errorf("tid=[%s]. XML Marshalling: [%v]", tid, err)
 	}
 	return &nativeCmsMetadataPublicationEvent{
 		Value: base64.StdEncoding.EncodeToString(marshalled),
