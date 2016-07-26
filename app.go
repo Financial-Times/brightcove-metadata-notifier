@@ -89,8 +89,8 @@ func buildMetadataMapper(config *config, client *http.Client) metadataMapper {
 func listen(mm metadataMapper, hc healthcheck) {
 	r := mux.NewRouter()
 	r.HandleFunc("/notify", mm.handleNotification).Methods("POST")
-	//r.HandleFunc("/__health", hc.health()).Methods("GET")
-	//r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
+	r.HandleFunc("/__health", hc.health()).Methods("GET")
+	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
 
 	http.Handle("/", r)
 	infoLogger.Printf("Starting to listen on port [%d]", mm.config.port)
