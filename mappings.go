@@ -83,3 +83,12 @@ func decodeTaxonomy(termID string) (string, error) {
 	}
 	return string(decoded), nil
 }
+
+func (mm metadataMapper) prettyPrintMappings() string {
+	s := fmt.Sprintf("metadataMapper.mappings: [\n")
+	for _, entry := range mm.mappings {
+		s += fmt.Sprintf("\tCanonicalName: [%s], ID: [%s], Taxonomy: [%s]\n", entry.CanonicalName, entry.ID, entry.Taxonomy)
+	}
+	s += fmt.Sprintf("]\n")
+	return s
+}

@@ -7,23 +7,25 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
+	"fmt"
 )
 
 type metadataMapper struct {
 	mappings map[string]term
-	config   *config
+	config   *notifierConfig
 	client   *http.Client
 }
 
-type config struct {
+type notifierConfig struct {
 	mappingURL              string
 	cmsMetadataNotifierAddr string
 	cmsMetadataNotifierHost string
+	cmsMetadataNotifierAuth string
 	port                    int
 }
 
 type healthcheck struct {
-	config *config
+	config *notifierConfig
 	client *http.Client
 }
 
@@ -36,10 +38,16 @@ func main() {
 		EnvVar: "CMS_METADATA_NOTIFIER_ADDR",
 	})
 	cmsMetadataNotifierHost := cliApp.String(cli.StringOpt{
-		Name:   "cms-metadata-notifier-address",
+		Name:   "cms-metadata-notifier-host-header",
 		Value:  "cms-metadata-notifier",
 		Desc:   "Host header to use to connect to cms-metadata-notifier",
-		EnvVar: "CMS_METADATA_NOTIFIER_ADDR",
+		EnvVar: "CMS_METADATA_NOTIFIER_HOST_HEADER",
+	})
+	cmsMetadataNotifierAuth := cliApp.String(cli.StringOpt{
+		Name:   "cms-metadata-notifier-auth",
+		Value:  "",
+		Desc:   "cms-metadata-notifier authorization header",
+		EnvVar: "CMS_METADATA_NOTIFIER_AUTH",
 	})
 	mappingURL := cliApp.String(cli.StringOpt{
 		Name:   "mapping-url",
@@ -59,18 +67,21 @@ func main() {
 		if *mappingURL == "" {
 			errorLogger.Panicf("Please provide a valid URL")
 		}
-		config := &config{
+		nConfig := &notifierConfig{
 			mappingURL:              *mappingURL,
 			cmsMetadataNotifierAddr: *cmsMetadataNotifierAddr,
 			cmsMetadataNotifierHost: *cmsMetadataNotifierHost,
+			cmsMetadataNotifierAuth: *cmsMetadataNotifierAuth,
 			port: *port,
 		}
+		infoLogger.Printf("%v", nConfig.prettyPrint())
 		httpClient := &http.Client{}
 
-		app := buildMetadataMapper(config, httpClient)
-		hc := healthcheck{config, httpClient}
+		metadataMapper := buildMetadataMapper(nConfig, httpClient)
+		infoLogger.Printf("%v", metadataMapper.prettyPrintMappings())
+		hc := healthcheck{nConfig, httpClient}
 
-		listen(app, hc)
+		listen(metadataMapper, hc)
 	}
 	err := cliApp.Run(os.Args)
 	if err != nil {
@@ -78,7 +89,7 @@ func main() {
 	}
 }
 
-func buildMetadataMapper(config *config, client *http.Client) metadataMapper {
+func buildMetadataMapper(config *notifierConfig, client *http.Client) metadataMapper {
 	return metadataMapper{
 		mappings: fetchMappings(config.mappingURL),
 		config:   config,
@@ -98,4 +109,12 @@ func listen(mm metadataMapper, hc healthcheck) {
 	if err != nil {
 		errorLogger.Panicf("Couldn't set up HTTP listener: [%+v]\n", err)
 	}
+}
+
+func (nc notifierConfig) prettyPrint() string {
+	authSet := "empty"
+	if nc.cmsMetadataNotifierAuth != "" {
+		authSet = "set, not empty"
+	}
+	return fmt.Sprintf("\n\t\tmappingURL: [%s]\n\t\tcmsMetadataNotifierAddr: [%s]\n\t\tcmsMetadataNotifierHost: [%s]\n\t\tport: [%s]\n\t\tcmsMetadataNotifierAuth: [%s]\n\t", nc.mappingURL, nc.cmsMetadataNotifierAddr, nc.cmsMetadataNotifierHost, nc.port, authSet)
 }
