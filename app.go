@@ -16,7 +16,7 @@ type metadataMapper struct {
 }
 
 type config struct {
-	berthaAddr              string
+	mappingURL              string
 	cmsMetadataNotifierAddr string
 	cmsMetadataNotifierHost string
 	port                    int
@@ -41,11 +41,11 @@ func main() {
 		Desc:   "Host header to use to connect to cms-metadata-notifier",
 		EnvVar: "CMS_METADATA_NOTIFIER_ADDR",
 	})
-	berthaAddr := cliApp.String(cli.StringOpt{
-		Name:   "bertha-address",
+	mappingURL := cliApp.String(cli.StringOpt{
+		Name:   "mapping-url",
 		Value:  "",
-		Desc:   "Address of bertha server",
-		EnvVar: "BERTHA_ADDR",
+		Desc:   "URL of the metadata mapping spreadsheet in Bertha",
+		EnvVar: "MAPPING_URL",
 	})
 	port := cliApp.Int(cli.IntOpt{
 		Name:   "port",
@@ -56,11 +56,11 @@ func main() {
 
 	cliApp.Action = func() {
 		initLogs(os.Stdout, os.Stdout, os.Stderr)
-		if *berthaAddr == "" {
+		if *mappingURL == "" {
 			errorLogger.Panicf("Please provide a valid URL")
 		}
 		config := &config{
-			berthaAddr:              *berthaAddr,
+			mappingURL:              *mappingURL,
 			cmsMetadataNotifierAddr: *cmsMetadataNotifierAddr,
 			cmsMetadataNotifierHost: *cmsMetadataNotifierHost,
 			port: *port,
@@ -80,7 +80,7 @@ func main() {
 
 func buildMetadataMapper(config *config, client *http.Client) metadataMapper {
 	return metadataMapper{
-		mappings: fetchMappings(config.berthaAddr),
+		mappings: fetchMappings(config.mappingURL),
 		config:   config,
 		client:   client,
 	}

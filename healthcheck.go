@@ -8,7 +8,7 @@ import (
 )
 
 func (hc healthcheck) health() func(w http.ResponseWriter, r *http.Request) {
-	return fthealth.HandlerParallel("Dependent services healthcheck", "Checks if all the dependent services are reachable and healthy.", hc.cmsMetadataNotifierReachable(), hc.berthaSpreadsheetAvailable())
+	return fthealth.HandlerParallel("Dependent services healthcheck", "Checks if all the dependent services are reachable and healthy.", hc.cmsMetadataNotifierReachable(), hc.mappingSpreadsheetAvailable())
 }
 
 func (hc healthcheck) gtg(w http.ResponseWriter, r *http.Request) {
@@ -51,19 +51,19 @@ func (hc healthcheck) checkCmsMetadataNotifierHealth() error {
 	return nil
 }
 
-func (hc healthcheck) berthaSpreadsheetAvailable() fthealth.Check {
+func (hc healthcheck) mappingSpreadsheetAvailable() fthealth.Check {
 	return fthealth.Check{
 		BusinessImpact:   "Video metadata might not be generated.",
-		Name:             "Bertha Spreadsheet Available",
+		Name:             "Mapping Spreadsheet Available",
 		PanicGuide:       "<coco runbook>",
 		Severity:         1,
-		TechnicalSummary: "Spreadsheet containing the mappings is not available through Bertha.",
+		TechnicalSummary: "Spreadsheet containing the metadata mappings is not available in Bertha.",
 		Checker:          hc.checkBerthaSpreadsheetHealth,
 	}
 }
 
 func (hc healthcheck) checkBerthaSpreadsheetHealth() error {
-	req, err := http.NewRequest("GET", hc.config.berthaAddr, nil)
+	req, err := http.NewRequest("GET", hc.config.mappingURL, nil)
 	if err != nil {
 		return err
 	}
