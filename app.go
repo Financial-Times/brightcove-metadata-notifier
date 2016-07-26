@@ -27,6 +27,7 @@ type healthcheck struct {
 	client *http.Client
 }
 
+//Testing if I can push to the repo
 func main() {
 	cliApp := cli.App("brightcove-metadata-notifier", "Gets the video model, maps the video tags to TME metadata from which it builds the raw metadata msg and posts it to cms-metadata-notifier")
 	cmsMetadataNotifierAddr := cliApp.String(cli.StringOpt{
