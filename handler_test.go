@@ -91,7 +91,7 @@ func TestSendMetadata_RequestHeadersAreSet(t *testing.T) {
 		}
 	}))
 	mm := metadataMapper{
-		config: &config{
+		config: &notifierConfig{
 			cmsMetadataNotifierAddr: ts.URL,
 			cmsMetadataNotifierHost: "metadata-notifier",
 		},
@@ -114,7 +114,7 @@ func TestSendMetadata_RequestBodyIsExpected(t *testing.T) {
 		}
 	}))
 	mm := metadataMapper{
-		config: &config{
+		config: &notifierConfig{
 			cmsMetadataNotifierAddr: ts.URL,
 		},
 		client: &http.Client{},
@@ -125,7 +125,7 @@ func TestSendMetadata_RequestBodyIsExpected(t *testing.T) {
 
 func TestSendMetadata_ExecutingHTTPRequestResultsInErr_ErrAndMsgIsExpected(t *testing.T) {
 	mm := metadataMapper{
-		config: &config{
+		config: &notifierConfig{
 			cmsMetadataNotifierAddr: "http://localhost:8080/notify",
 			cmsMetadataNotifierHost: "cms-metadata-notifier",
 		},
@@ -152,7 +152,7 @@ func TestSendMetadata_NonHealhtyStatusCodeReceived_ErrAndMsgIsExpected(t *testin
 		w.WriteHeader(418)
 	}))
 	mm := metadataMapper{
-		config: &config{
+		config: &notifierConfig{
 			cmsMetadataNotifierAddr: ts.URL,
 		},
 		client: &http.Client{},
