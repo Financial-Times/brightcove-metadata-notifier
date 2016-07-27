@@ -100,9 +100,7 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 		return fmt.Errorf("Creating request: [%v]", err)
 	}
 	req.Header.Add("Content-type", "application/json")
-	if mm.config.cmsMetadataNotifierHost != "" {
-		req.Host = mm.config.cmsMetadataNotifierHost
-	}
+	req.Host = mm.config.cmsMetadataNotifierHost
 	if mm.config.cmsMetadataNotifierAuth != "" {
 		req.Header.Add("Authorization", mm.config.cmsMetadataNotifierAuth)
 	}
