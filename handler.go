@@ -27,6 +27,7 @@ var defaultTagScore = tagScore{Confidence: 90, Relevance: 90}
 
 func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(r)
+	infoLogger.Printf("Received video. tid=[%s]", tid);
 	var v video
 	err := json.NewDecoder(r.Body).Decode(&v)
 	if err != nil {
@@ -56,6 +57,7 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 		handleServerErr(w, fmt.Sprintf("tid=[%s]. %v", tid, err))
 		return
 	}
+	infoLogger.Printf("Sent metadata event for video=[%s] tid=[%s]", v.UUID, tid);
 }
 
 func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
