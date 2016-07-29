@@ -99,6 +99,8 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	if err != nil {
 		return fmt.Errorf("Creating request: [%v]", err)
 	}
+	req.Header.Add("X-Origin-System-Id", "brightcove")
+	req.Header.Add("X-Request-Id", tid)
 	req.Header.Add("Content-type", "application/json")
 	req.Host = mm.config.cmsMetadataNotifierHost
 	if mm.config.cmsMetadataNotifierAuth != "" {
