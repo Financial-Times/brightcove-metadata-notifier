@@ -97,7 +97,7 @@ func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 }
 
 func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
-	req, err := http.NewRequest("POST", mm.config.cmsMetadataNotifierAddr, bytes.NewReader(metadata))
+	req, err := http.NewRequest("POST", mm.config.cmsMetadataNotifierAddr+"/notify", bytes.NewReader(metadata))
 	if err != nil {
 		return fmt.Errorf("Creating request: [%v]", err)
 	}
