@@ -110,7 +110,7 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 		req.Header.Add("Authorization", mm.config.cmsMetadataNotifierAuth)
 	}
 	infoLogger.Printf("req.Host=%v, Host %v, X-Request-Id %v, X-Origin-System-Id %v, Auth %v, to request to address %v...\n", req.Host, req.Header.Get("Host"), req.Header.Get("X-Request-Id"), req.Header.Get("X-Origin-System-Id"), req.Header.Get("Authorization"), req.URL.String())
-	infoLogger.Printf("body\n%v", string(metadata))
+	infoLogger.Printf("body: %v", string(metadata))
 	resp, err := mm.client.Do(req)
 	if err != nil {
 		respBody, _  := ioutil.ReadAll(resp.Body)
@@ -119,6 +119,8 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	}
 	defer cleanupResp(resp)
 	if resp.StatusCode != 200 {
+		respBody, _  := ioutil.ReadAll(resp.Body)
+		warnLogger.Printf("Response body: %v", respBody)
 		return fmt.Errorf("Sending metadata to notifier: unexpected status code: [%d]", resp.StatusCode)
 	}
 	return nil
