@@ -108,6 +108,7 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	if mm.config.cmsMetadataNotifierAuth != "" {
 		req.Header.Add("Authorization", mm.config.cmsMetadataNotifierAuth)
 	}
+	infoLogger.Printf("req.Host=%v, X-Request-Id %v, X-Origin-System-Id %v, Auth %v, to request to address %v...\n", req.Host, req.Header.Get("X-Request-Id"), req.Header.Get("X-Origin-System-Id"), req.Header.Get("Authorization"), req.URL.String())
 	resp, err := mm.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Sending metadata to notifier: [%v]", err)
