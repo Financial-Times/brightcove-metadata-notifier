@@ -105,12 +105,16 @@ func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	req.Header.Add("X-Request-Id", tid)
 	req.Header.Add("Content-type", "application/json")
 	req.Host = mm.config.cmsMetadataNotifierHost
+	req.Header.Add("Host", mm.config.cmsMetadataNotifierHost)
 	if mm.config.cmsMetadataNotifierAuth != "" {
 		req.Header.Add("Authorization", mm.config.cmsMetadataNotifierAuth)
 	}
-	infoLogger.Printf("req.Host=%v, X-Request-Id %v, X-Origin-System-Id %v, Auth %v, to request to address %v...\n", req.Host, req.Header.Get("X-Request-Id"), req.Header.Get("X-Origin-System-Id"), req.Header.Get("Authorization"), req.URL.String())
+	infoLogger.Printf("req.Host=%v, Host %v, X-Request-Id %v, X-Origin-System-Id %v, Auth %v, to request to address %v...\n", req.Host, req.Header.Get("Host"), req.Header.Get("X-Request-Id"), req.Header.Get("X-Origin-System-Id"), req.Header.Get("Authorization"), req.URL.String())
+	infoLogger.Printf("body\n%v", string(metadata))
 	resp, err := mm.client.Do(req)
 	if err != nil {
+		respBody, _  := ioutil.ReadAll(resp.Body)
+		warnLogger.Printf("Response body: %v", respBody)
 		return fmt.Errorf("Sending metadata to notifier: [%v]", err)
 	}
 	defer cleanupResp(resp)
