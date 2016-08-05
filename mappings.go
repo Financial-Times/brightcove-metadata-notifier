@@ -33,7 +33,6 @@ func fetchMappings(mappingURL string) map[string]term {
 	infoLogger.Printf("Processing mappings...\n")
 	mappings := make(map[string]term, 0)
 	for _, entry := range entries {
-		infoLogger.Printf("%v\n", entry)
 		mapping, err := processMapping(entry)
 		if err != nil {
 			errorLogger.Println(err)
@@ -68,8 +67,9 @@ func processMapping(entry map[string]string) (*mapping, error) {
 	return &mapping{
 		key: bcTag,
 		value: term{
-			ID:       termID,
-			Taxonomy: taxonomy,
+			CanonicalName: bcTag,
+			ID:            termID,
+			Taxonomy:      taxonomy,
 		},
 	}, nil
 }
