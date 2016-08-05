@@ -30,8 +30,10 @@ func fetchMappings(mappingURL string) map[string]term {
 		errorLogger.Panicf("Couldn't decode mappings: [%#v]", err)
 	}
 
+	infoLogger.Printf("Processing mappings...\n")
 	mappings := make(map[string]term, 0)
 	for _, entry := range entries {
+		infoLogger.Printf("%v\n", entry)
 		mapping, err := processMapping(entry)
 		if err != nil {
 			errorLogger.Println(err)
