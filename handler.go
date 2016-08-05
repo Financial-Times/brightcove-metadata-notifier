@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/Financial-Times/transactionid-utils-go"
+	"strings"
 )
 
 type video struct {
@@ -86,7 +87,7 @@ func buildContentRef(uuid string, terms []term, tid string) contentRef {
 func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 	var annotations []term
 	for _, tag := range tags {
-		t, present := mm.mappings[tag]
+		t, present := mm.mappings[strings.ToLower(tag)]
 		if !present {
 			infoLogger.Printf("tid=[%s]. Brightcove tag [%s] has no TME mapping.", tid, tag)
 			continue

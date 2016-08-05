@@ -65,7 +65,7 @@ func processMapping(entry map[string]string) (*mapping, error) {
 		return nil, err
 	}
 	return &mapping{
-		key: bcTag,
+		key: strings.ToLower(bcTag),
 		value: term{
 			CanonicalName: bcTag,
 			ID:            termID,
