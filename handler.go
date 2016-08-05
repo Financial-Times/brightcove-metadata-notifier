@@ -94,7 +94,6 @@ func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 		}
 		annotations = append(annotations, t)
 	}
-	infoLogger.Printf("tid=[%s]. Processed annotations: [%s].", tid, annotations)
 	return annotations
 }
 
