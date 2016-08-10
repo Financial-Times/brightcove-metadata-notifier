@@ -5,9 +5,9 @@ import (
 	"os"
 	"strconv"
 
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
-	"fmt"
 )
 
 type metadataMapper struct {
