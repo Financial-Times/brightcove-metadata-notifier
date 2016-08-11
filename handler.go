@@ -39,11 +39,6 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 		handleClientErr(w, fmt.Sprintf("tid=[%s]. Missing uuid: [%#v]", tid, v))
 		return
 	}
-	if len(v.Tags) == 0 {
-		infoLogger.Printf("tid=[%s]. Video with uuid [%s] has no tags. No metadata will be generated.", tid, v.UUID)
-		return
-	}
-
 	ev, err := mm.createMetadataPublishEventMsg(v, tid)
 	if err != nil {
 		handleServerErr(w, fmt.Sprintf("tid=[%s]. %v", tid, err))
