@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/Financial-Times/transactionid-utils-go"
+	"strings"
 )
 
 type video struct {
@@ -27,7 +28,7 @@ var defaultTagScore = tagScore{Confidence: 90, Relevance: 90}
 
 func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(r)
-	infoLogger.Printf("Received video. tid=[%s]", tid);
+	infoLogger.Printf("Received video. tid=[%s]", tid)
 	var v video
 	err := json.NewDecoder(r.Body).Decode(&v)
 	if err != nil {
@@ -38,11 +39,6 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 		handleClientErr(w, fmt.Sprintf("tid=[%s]. Missing uuid: [%#v]", tid, v))
 		return
 	}
-	if len(v.Tags) == 0 {
-		infoLogger.Printf("tid=[%s]. Video with uuid [%s] has no tags. No metadata will be generated.", tid, v.UUID)
-		return
-	}
-
 	ev, err := mm.createMetadataPublishEventMsg(v, tid)
 	if err != nil {
 		handleServerErr(w, fmt.Sprintf("tid=[%s]. %v", tid, err))
@@ -57,7 +53,7 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 		handleServerErr(w, fmt.Sprintf("tid=[%s]. %v", tid, err))
 		return
 	}
-	infoLogger.Printf("Sent metadata event for video=[%s] tid=[%s]", v.UUID, tid);
+	infoLogger.Printf("Sent metadata event for video=[%s] tid=[%s]", v.UUID, tid)
 }
 
 func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
@@ -86,7 +82,7 @@ func buildContentRef(uuid string, terms []term, tid string) contentRef {
 func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 	var annotations []term
 	for _, tag := range tags {
-		t, present := mm.mappings[tag]
+		t, present := mm.mappings[strings.ToLower(tag)]
 		if !present {
 			infoLogger.Printf("tid=[%s]. Brightcove tag [%s] has no TME mapping.", tid, tag)
 			continue
@@ -97,7 +93,7 @@ func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 }
 
 func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
-	req, err := http.NewRequest("POST", mm.config.cmsMetadataNotifierAddr, bytes.NewReader(metadata))
+	req, err := http.NewRequest("POST", mm.config.cmsMetadataNotifierAddr+"/notify", bytes.NewReader(metadata))
 	if err != nil {
 		return fmt.Errorf("Creating request: [%v]", err)
 	}

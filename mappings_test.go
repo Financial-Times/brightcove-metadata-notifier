@@ -50,8 +50,8 @@ func TestProcessMapping_HappyScenarios_BrightcoveSearchTermAndTMEIDAndTaxonomyAr
 		{
 			mapping: map[string]string{
 				"streamurl":            "/stream/authorsId/Q0ItMDAwMDkyMw==-QXV0aG9ycw==",
-				"brightcovesearchterm": "John Authers"},
-			bcTag:    "John Authers",
+				"brightcovesearchterm": "john authers"},
+			bcTag:    "john authers",
 			tmeID:    "Q0ItMDAwMDkyMw==-QXV0aG9ycw==",
 			taxonomy: "Authors",
 		},

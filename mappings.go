@@ -30,6 +30,7 @@ func fetchMappings(mappingURL string) map[string]term {
 		errorLogger.Panicf("Couldn't decode mappings: [%#v]", err)
 	}
 
+	infoLogger.Printf("Processing mappings...\n")
 	mappings := make(map[string]term, 0)
 	for _, entry := range entries {
 		mapping, err := processMapping(entry)
@@ -64,10 +65,11 @@ func processMapping(entry map[string]string) (*mapping, error) {
 		return nil, err
 	}
 	return &mapping{
-		key: bcTag,
+		key: strings.ToLower(bcTag),
 		value: term{
-			ID:       termID,
-			Taxonomy: taxonomy,
+			CanonicalName: bcTag,
+			ID:            termID,
+			Taxonomy:      taxonomy,
 		},
 	}, nil
 }

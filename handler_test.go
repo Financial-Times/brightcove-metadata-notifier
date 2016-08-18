@@ -17,6 +17,7 @@ func init() {
 }
 
 func TestHandleNotification_RequestBodyValidation_CorrectStatusCodeReturned(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 	var testCases = []struct {
 		req        string
 		respStatus int
@@ -34,9 +35,13 @@ func TestHandleNotification_RequestBodyValidation_CorrectStatusCodeReturned(t *t
 			200,
 		},
 	}
-
-	mm := metadataMapper{}
-
+	mm := metadataMapper{
+		config: &notifierConfig{
+			cmsMetadataNotifierAddr: ts.URL,
+			cmsMetadataNotifierHost: "metadata-notifier",
+		},
+		client: &http.Client{},
+	}
 	for _, tc := range testCases {
 		w := httptest.NewRecorder()
 		req, err := http.NewRequest("POST", "test-url", bytes.NewReader([]byte(tc.req)))
@@ -57,19 +62,43 @@ func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.
 	}
 	expected := nativeCmsMetadataPublicationEvent{
 		UUID:  "1234",
-		Value: "PGNvbnRlbnRSZWY+PHRhZ3M+PHRhZz48dGVybSB0YXhvbm9teT0iU2VjdGlvbnMiIGlkPSJNVEEyLVUyVmpkR2x2Ym5NPSI+PC90ZXJtPjxzY29yZSBjb25maWRlbmNlPSI5MCIgcmVsZXZhbmNlPSI5MCI+PC9zY29yZT48L3RhZz48dGFnPjx0ZXJtIHRheG9ub215PSJTZWN0aW9ucyIgaWQ9Ik1UQTEtVTJWamRHbHZibk09Ij48L3Rlcm0+PHNjb3JlIGNvbmZpZGVuY2U9IjkwIiByZWxldmFuY2U9IjkwIj48L3Njb3JlPjwvdGFnPjwvdGFncz48cHJpbWFyeVNlY3Rpb24gdGF4b25vbXk9IiIgaWQ9IiI+PC9wcmltYXJ5U2VjdGlvbj48L2NvbnRlbnRSZWY+",
+		Value: "PGNvbnRlbnRSZWY+PHRhZ3M+PHRhZz48dGVybSB0YXhvbm9teT0iU2VjdGlvbnMiIGlkPSJNVEEyLVUyVmpkR2x2Ym5NPSI+PGNhbm9uaWNhbE5hbWU+RW1lcmdpbmctTWFya2V0czwvY2Fub25pY2FsTmFtZT48L3Rlcm0+PHNjb3JlIGNvbmZpZGVuY2U9IjkwIiByZWxldmFuY2U9IjkwIj48L3Njb3JlPjwvdGFnPjx0YWc+PHRlcm0gdGF4b25vbXk9IlNlY3Rpb25zIiBpZD0iTVRBMS1VMlZqZEdsdmJuTT0iPjxjYW5vbmljYWxOYW1lPkNvbW1vZGl0aWVzPC9jYW5vbmljYWxOYW1lPjwvdGVybT48c2NvcmUgY29uZmlkZW5jZT0iOTAiIHJlbGV2YW5jZT0iOTAiPjwvc2NvcmU+PC90YWc+PC90YWdzPjxwcmltYXJ5U2VjdGlvbiB0YXhvbm9teT0iIiBpZD0iIj48L3ByaW1hcnlTZWN0aW9uPjwvY29udGVudFJlZj4=",
 	}
 	mm := metadataMapper{
 		mappings: map[string]term{
-			"Emerging-Markets": term{
-				ID:       "MTA2-U2VjdGlvbnM=",
-				Taxonomy: "Sections",
+			"emerging-markets": term{
+				CanonicalName: "Emerging-Markets",
+				ID:            "MTA2-U2VjdGlvbnM=",
+				Taxonomy:      "Sections",
 			},
-			"Commodities": term{
-				ID:       "MTA1-U2VjdGlvbnM=",
-				Taxonomy: "Sections",
+			"commodities": term{
+				CanonicalName: "Commodities",
+				ID:            "MTA1-U2VjdGlvbnM=",
+				Taxonomy:      "Sections",
 			},
 		},
+	}
+
+	actual, err := mm.createMetadataPublishEventMsg(video, "unit-test")
+	if err != nil {
+		t.Errorf("Expected no error. Found: [%v]", err)
+	}
+	if expected != *actual {
+		t.Errorf("Expected: [%v]. Actual: [%v]", expected, *actual)
+	}
+}
+
+func TestCreateMetadataPublishEvent_EmptyTags(t *testing.T) {
+	video := video{
+		UUID: "1234",
+		Tags: []string{},
+	}
+	expected := nativeCmsMetadataPublicationEvent{
+		UUID:  "1234",
+		Value: "PGNvbnRlbnRSZWY+PHRhZ3M+PC90YWdzPjxwcmltYXJ5U2VjdGlvbiB0YXhvbm9teT0iIiBpZD0iIj48L3ByaW1hcnlTZWN0aW9uPjwvY29udGVudFJlZj4=",
+	}
+	mm := metadataMapper{
+		mappings: map[string]term{},
 	}
 
 	actual, err := mm.createMetadataPublishEventMsg(video, "unit-test")
