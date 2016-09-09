@@ -43,7 +43,7 @@ func TestProcessMapping_HappyScenarios_BrightcoveSearchTermAndTMEIDAndTaxonomyAr
 				"streamurl":            "/stream/sectionsId/MQ==-U2VjdGlvbnM=",
 				"brightcovesearchterm": "tag:section:world",
 			},
-			bcTag:    "tag:section:world",
+			bcTag:    "section:world",
 			tmeID:    "MQ==-U2VjdGlvbnM=",
 			taxonomy: "Sections",
 		},

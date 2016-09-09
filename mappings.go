@@ -48,6 +48,7 @@ func processMapping(entry map[string]string) (*mapping, error) {
 	if !present {
 		return nil, fmt.Errorf("Couldn't found brightcoveSearchTerm in mapping: [%+v]", entry)
 	}
+	bcTag = strings.TrimPrefix(bcTag, "tag:")
 
 	streamURL, present := entry["streamurl"]
 	if !present {
