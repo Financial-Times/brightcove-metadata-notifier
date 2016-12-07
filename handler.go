@@ -56,14 +56,10 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 	infoLogger.Printf("Sent metadata event for video=[%s] tid=[%s]", v.UUID, tid)
 }
 
-func (mm metadataMapper) handleRefresh(w http.ResponseWriter, r *http.Request) {
+func (mm *metadataMapper) handleReload(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			errMessage, ok := err.(string)
-			if !ok {
-				errMessage = "Unexpected server error"
-			}
-			handleServerErr(w, errMessage)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 	}()
 	mm.loadMappings()

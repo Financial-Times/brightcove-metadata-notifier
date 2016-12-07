@@ -36,7 +36,7 @@ func main() {
 		Name:   "cms-metadata-notifier-address",
 		Value:  "",
 		Desc:   "Address of the cmsMetadataNotifier",
-		EnvVar: "CMS_MEqTADATA_NOTIFIER_ADDR",
+		EnvVar: "CMS_METADATA_NOTIFIER_ADDR",
 	})
 	cmsMetadataNotifierHost := cliApp.String(cli.StringOpt{
 		Name:   "cms-metadata-notifier-host-header",
@@ -107,7 +107,7 @@ func listen(mm metadataMapper, hc healthcheck) {
 	r.HandleFunc("/notify", mm.handleNotification).Methods("POST")
 	r.HandleFunc("/__health", hc.health()).Methods("GET")
 	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
-	r.HandleFunc("/refresh", mm.handleRefresh).Methods("POST")
+	r.HandleFunc("/reload", mm.handleReload).Methods("POST")
 
 	http.Handle("/", r)
 	infoLogger.Printf("Starting to listen on port [%d]", mm.config.port)
