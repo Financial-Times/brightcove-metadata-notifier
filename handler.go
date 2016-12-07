@@ -56,6 +56,19 @@ func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Reque
 	infoLogger.Printf("Sent metadata event for video=[%s] tid=[%s]", v.UUID, tid)
 }
 
+func (mm metadataMapper) handleRefresh(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			errMessage, ok := err.(string)
+			if !ok {
+				errMessage = "Unexpected server error"
+			}
+			handleServerErr(w, errMessage)
+		}
+	}()
+	mm.loadMappings()
+}
+
 func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
 	marshalled, err := xml.Marshal(buildContentRef(v.UUID, mm.getAnnotations(v.Tags, tid), tid))
 	if err != nil {
@@ -81,6 +94,10 @@ func buildContentRef(uuid string, terms []term, tid string) contentRef {
 
 func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 	var annotations []term
+
+	mm.RLock()
+	defer mm.RUnlock()
+
 	for _, tag := range tags {
 		t, present := mm.mappings[strings.ToLower(tag)]
 		if !present {

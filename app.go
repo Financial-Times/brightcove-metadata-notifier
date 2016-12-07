@@ -1,16 +1,17 @@
 package main
 
 import (
-	"net/http"
-	"os"
-	"strconv"
-
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jawher/mow.cli"
+	"net/http"
+	"os"
+	"strconv"
+	"sync"
 )
 
 type metadataMapper struct {
+	sync.RWMutex
 	mappings map[string]term
 	config   *notifierConfig
 	client   *http.Client
@@ -35,7 +36,7 @@ func main() {
 		Name:   "cms-metadata-notifier-address",
 		Value:  "",
 		Desc:   "Address of the cmsMetadataNotifier",
-		EnvVar: "CMS_METADATA_NOTIFIER_ADDR",
+		EnvVar: "CMS_MEqTADATA_NOTIFIER_ADDR",
 	})
 	cmsMetadataNotifierHost := cliApp.String(cli.StringOpt{
 		Name:   "cms-metadata-notifier-host-header",
@@ -77,8 +78,12 @@ func main() {
 		infoLogger.Printf("%v", nConfig.prettyPrint())
 		httpClient := &http.Client{}
 
-		metadataMapper := buildMetadataMapper(nConfig, httpClient)
-		infoLogger.Printf("%v", metadataMapper.prettyPrintMappings())
+		metadataMapper := metadataMapper{
+			config: nConfig,
+			client: httpClient,
+		}
+		metadataMapper.loadMappings()
+
 		hc := healthcheck{nConfig, httpClient}
 
 		listen(metadataMapper, hc)
@@ -89,12 +94,12 @@ func main() {
 	}
 }
 
-func buildMetadataMapper(config *notifierConfig, client *http.Client) metadataMapper {
-	return metadataMapper{
-		mappings: fetchMappings(config.mappingURL),
-		config:   config,
-		client:   client,
-	}
+func (mm *metadataMapper) loadMappings() {
+	mm.Lock()
+	defer mm.Unlock()
+
+	mm.mappings = fetchMappings(mm.config.mappingURL)
+	infoLogger.Printf("%v", mm.prettyPrintMappings())
 }
 
 func listen(mm metadataMapper, hc healthcheck) {
@@ -102,6 +107,7 @@ func listen(mm metadataMapper, hc healthcheck) {
 	r.HandleFunc("/notify", mm.handleNotification).Methods("POST")
 	r.HandleFunc("/__health", hc.health()).Methods("GET")
 	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
+	r.HandleFunc("/refresh", mm.handleRefresh).Methods("POST")
 
 	http.Handle("/", r)
 	infoLogger.Printf("Starting to listen on port [%d]", mm.config.port)
