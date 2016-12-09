@@ -107,7 +107,7 @@ func listen(mm metadataMapper, hc healthcheck) {
 	r.HandleFunc("/notify", mm.handleNotification).Methods("POST")
 	r.HandleFunc("/__health", hc.health()).Methods("GET")
 	r.HandleFunc("/__gtg", hc.gtg).Methods("GET")
-	r.HandleFunc("/reload", mm.handleReload).Methods("POST")
+	r.HandleFunc("/__reload", mm.handleReload).Methods("POST")
 
 	http.Handle("/", r)
 	infoLogger.Printf("Starting to listen on port [%d]", mm.config.port)
