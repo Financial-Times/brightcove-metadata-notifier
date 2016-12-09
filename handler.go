@@ -26,7 +26,7 @@ type nativeCmsMetadataPublicationEvent struct {
 
 var defaultTagScore = tagScore{Confidence: 90, Relevance: 90}
 
-func (mm metadataMapper) handleNotification(w http.ResponseWriter, r *http.Request) {
+func (mm *metadataMapper) handleNotification(w http.ResponseWriter, r *http.Request) {
 	tid := transactionidutils.GetTransactionIDFromRequest(r)
 	infoLogger.Printf("Received video. tid=[%s]", tid)
 	var v video
@@ -65,8 +65,8 @@ func (mm *metadataMapper) handleReload(w http.ResponseWriter, r *http.Request) {
 	mm.loadMappings()
 }
 
-func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
-	marshalled, err := xml.Marshal(buildContentRef(v.UUID, mm.getAnnotations(v.Tags, tid), tid))
+func (mm *metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*nativeCmsMetadataPublicationEvent, error) {
+	marshalled, err := xml.Marshal(buildContentRef(mm.getAnnotations(v.Tags, tid)))
 	if err != nil {
 		return nil, fmt.Errorf("tid=[%s]. XML Marshalling: [%v]", tid, err)
 	}
@@ -76,19 +76,19 @@ func (mm metadataMapper) createMetadataPublishEventMsg(v video, tid string) (*na
 	}, nil
 }
 
-func buildContentRef(uuid string, terms []term, tid string) contentRef {
+func buildContentRef(terms []term) contentRef {
 	var tagz []tag
 
 	for _, term := range terms {
-		tagz = append(tagz, tag{term, defaultTagScore})
+		tagz = append(tagz, tag{Term: term, TagScore: defaultTagScore})
 	}
 
 	return contentRef{
-		TagHolder: tags{tagz},
+		TagHolder: tags{Tags: tagz},
 	}
 }
 
-func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
+func (mm *metadataMapper) getAnnotations(tags []string, tid string) []term {
 	var annotations []term
 
 	mm.RLock()
@@ -105,7 +105,7 @@ func (mm metadataMapper) getAnnotations(tags []string, tid string) []term {
 	return annotations
 }
 
-func (mm metadataMapper) sendMetadata(metadata []byte, tid string) error {
+func (mm *metadataMapper) sendMetadata(metadata []byte, tid string) error {
 	req, err := http.NewRequest("POST", mm.config.cmsMetadataNotifierAddr+"/notify", bytes.NewReader(metadata))
 	if err != nil {
 		return fmt.Errorf("Creating request: [%v]", err)

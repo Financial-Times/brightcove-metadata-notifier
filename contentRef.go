@@ -1,6 +1,5 @@
 package main
 
-// contentRef models the data as it comes from the metadata publishing event
 type contentRef struct {
 	TagHolder      tags `xml:"tags"`
 	PrimarySection term `xml:"primarySection,omitempty"`

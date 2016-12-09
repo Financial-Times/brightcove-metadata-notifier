@@ -66,7 +66,7 @@ func main() {
 	cliApp.Action = func() {
 		initLogs(os.Stdout, os.Stdout, os.Stderr)
 		if *mappingURL == "" {
-			errorLogger.Panicf("Please provide a valid URL")
+			errorLogger.Panic("Please provide a valid URL")
 		}
 		nConfig := &notifierConfig{
 			mappingURL:              *mappingURL,
@@ -78,15 +78,15 @@ func main() {
 		infoLogger.Printf("%v", nConfig.prettyPrint())
 		httpClient := &http.Client{}
 
-		metadataMapper := metadataMapper{
+		mapper := metadataMapper{
 			config: nConfig,
 			client: httpClient,
 		}
-		metadataMapper.loadMappings()
+		mapper.loadMappings()
 
-		hc := healthcheck{nConfig, httpClient}
+		hc := healthcheck{config: nConfig, client: httpClient}
 
-		listen(metadataMapper, hc)
+		listen(&mapper, hc)
 	}
 	err := cliApp.Run(os.Args)
 	if err != nil {
@@ -102,7 +102,7 @@ func (mm *metadataMapper) loadMappings() {
 	infoLogger.Printf("%v", mm.prettyPrintMappings())
 }
 
-func listen(mm metadataMapper, hc healthcheck) {
+func listen(mm *metadataMapper, hc healthcheck) {
 	r := mux.NewRouter()
 	r.HandleFunc("/notify", mm.handleNotification).Methods("POST")
 	r.HandleFunc("/__health", hc.health()).Methods("GET")
@@ -122,5 +122,5 @@ func (nc notifierConfig) prettyPrint() string {
 	if nc.cmsMetadataNotifierAuth != "" {
 		authSet = "set, not empty"
 	}
-	return fmt.Sprintf("\n\t\tmappingURL: [%s]\n\t\tcmsMetadataNotifierAddr: [%s]\n\t\tcmsMetadataNotifierHost: [%s]\n\t\tport: [%s]\n\t\tcmsMetadataNotifierAuth: [%s]\n\t", nc.mappingURL, nc.cmsMetadataNotifierAddr, nc.cmsMetadataNotifierHost, nc.port, authSet)
+	return fmt.Sprintf("\n\t\tmappingURL: [%s]\n\t\tcmsMetadataNotifierAddr: [%s]\n\t\tcmsMetadataNotifierHost: [%s]\n\t\tport: [%d]\n\t\tcmsMetadataNotifierAuth: [%s]\n\t", nc.mappingURL, nc.cmsMetadataNotifierAddr, nc.cmsMetadataNotifierHost, nc.port, authSet)
 }

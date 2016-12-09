@@ -30,7 +30,7 @@ func fetchMappings(mappingURL string) map[string]term {
 		errorLogger.Panicf("Couldn't decode mappings: [%#v]", err)
 	}
 
-	infoLogger.Printf("Processing mappings...\n")
+	infoLogger.Println("Processing mappings...")
 	mappings := make(map[string]term, 0)
 	for _, entry := range entries {
 		mapping, err := processMapping(entry)
@@ -87,11 +87,11 @@ func decodeTaxonomy(termID string) (string, error) {
 	return string(decoded), nil
 }
 
-func (mm metadataMapper) prettyPrintMappings() string {
-	s := fmt.Sprintf("metadataMapper.mappings: [\n")
+func (mm *metadataMapper) prettyPrintMappings() string {
+	s := fmt.Sprint("metadataMapper.mappings: [\n")
 	for _, entry := range mm.mappings {
 		s += fmt.Sprintf("\tCanonicalName: [%s], ID: [%s], Taxonomy: [%s]\n", entry.CanonicalName, entry.ID, entry.Taxonomy)
 	}
-	s += fmt.Sprintf("]\n")
+	s += fmt.Sprint("]\n")
 	return s
 }
