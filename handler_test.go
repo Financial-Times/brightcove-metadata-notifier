@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"errors"
 )
 
 func init() {
