@@ -32,13 +32,15 @@ Brightcove metadata.
 
 ### /__reload
 
-Reload the tags mappings loaded in application by querying the remote endpoint (set with MAPPING_URL).
+Reload the tags mappings loaded in application by querying the remote endpoint (set with MAPPING_URL). The loading of tags mappings which is first done during application startup,
+is based on the response sent by the remote endpoint. This link shows an example of the mapping received by this
+application: https://docs.google.com/spreadsheets/d/1UTzLQPgg_POaBZeOfAQoxY5YmjKxMqdP9O9oa_Fto9s/edit#gid=0
 
 ### POST /__reload
 
 Examples:
 ```
-curl -X POST -H "Content-Type: application/json" localhost:8080/notify --data '{"uuid":"123", "tags":["brazil"]}'
+curl -X POST -H "Content-Type: application/json" localhost:8080/notify --data '{"uuid":"370df85c-bdfc-11e6-8b45-b8b81dd5d080", "tags":["brazil"]}'
 
 curl -X POST -H "Content-Type: application/json" localhost:8080/__reload
 ```
