@@ -100,7 +100,7 @@ func TestDecodeTaconomy_HappyScenario_DecodedTaxonomyIsCorrect(t *testing.T) {
 	actual, err := decodeTaxonomy(validTMEID)
 
 	if err != nil {
-		t.Errorf("Expected success.")
+		t.Error("Expected success.")
 	}
 	if actual != expected {
 		t.Errorf("Expected: [%s]. Actual: [%s]", expected, actual)

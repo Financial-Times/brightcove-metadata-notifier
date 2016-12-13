@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -56,7 +56,7 @@ func TestHandleNotification_RequestBodyValidation_CorrectStatusCodeReturned(t *t
 }
 
 func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.T) {
-	video := video{
+	v := video{
 		UUID: "1234",
 		Tags: []string{"Emerging-Markets", "Commodities"},
 	}
@@ -79,7 +79,7 @@ func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.
 		},
 	}
 
-	actual, err := mm.createMetadataPublishEventMsg(video, "unit-test")
+	actual, err := mm.createMetadataPublishEventMsg(v, "unit-test")
 	if err != nil {
 		t.Errorf("Expected no error. Found: [%v]", err)
 	}
@@ -89,7 +89,7 @@ func TestCreateMetadataPublishEvent_CreatedEventMatchesExpectedEvent(t *testing.
 }
 
 func TestCreateMetadataPublishEvent_EmptyTags(t *testing.T) {
-	video := video{
+	v := video{
 		UUID: "1234",
 		Tags: []string{},
 	}
@@ -101,7 +101,7 @@ func TestCreateMetadataPublishEvent_EmptyTags(t *testing.T) {
 		mappings: map[string]term{},
 	}
 
-	actual, err := mm.createMetadataPublishEventMsg(video, "unit-test")
+	actual, err := mm.createMetadataPublishEventMsg(v, "unit-test")
 	if err != nil {
 		t.Errorf("Expected no error. Found: [%v]", err)
 	}
@@ -161,7 +161,7 @@ func TestSendMetadata_ExecutingHTTPRequestResultsInErr_ErrAndMsgIsExpected(t *te
 		client: &http.Client{
 			Transport: &http.Transport{
 				Proxy: func(req *http.Request) (*url.URL, error) {
-					return nil, fmt.Errorf("Test scenarios with error")
+					return nil, errors.New("Test scenarios with error")
 				},
 			},
 		},
@@ -169,7 +169,7 @@ func TestSendMetadata_ExecutingHTTPRequestResultsInErr_ErrAndMsgIsExpected(t *te
 
 	err := mm.sendMetadata([]byte(""), "test_tid")
 	if err == nil {
-		t.Errorf("Expected error.")
+		t.Error("Expected error.")
 	}
 	if !strings.Contains(err.Error(), "Sending metadata to notifier") {
 		t.Errorf("Unexpected err msg: [%s]", err.Error())
@@ -189,9 +189,105 @@ func TestSendMetadata_NonHealhtyStatusCodeReceived_ErrAndMsgIsExpected(t *testin
 
 	err := mm.sendMetadata([]byte(""), "test_tid")
 	if err == nil {
-		t.Errorf("Expected error.")
+		t.Error("Expected error.")
 	}
 	if !strings.Contains(err.Error(), "unexpected status code") {
 		t.Errorf("Unexpected err msg: [%s]", err.Error())
+	}
+}
+
+func TestHandleReload_SuccessfulReload(t *testing.T) {
+	var testCases = []struct {
+		body            string
+		mappingKey      string
+		mappingID       string
+		mappingTaxonomy string
+	}{
+		{
+			body:            `{"streamurl":"/stream/sectionsId/MQ==-U2VjdGlvbnM=","brightcovesearchterm":"tag:section:world","brightcovesearchmode":null}`,
+			mappingKey:      "section:world",
+			mappingID:       "MQ==-U2VjdGlvbnM=",
+			mappingTaxonomy: "Sections",
+		},
+		{
+			body:            `{"streamurl":"/stream/sectionsId/Mjk=-U2VjdGlvbnM=","brightcovesearchterm":"tag:section:Companies","brightcovesearchmode":null}`,
+			mappingKey:      "section:companies",
+			mappingID:       "Mjk=-U2VjdGlvbnM=",
+			mappingTaxonomy: "Sections",
+		},
+	}
+
+	mappingServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		body := "["
+		for i, testCase := range testCases {
+			if i != 0 {
+				body += ","
+			}
+			body += testCase.body
+		}
+		body += "]"
+		w.Write([]byte(body))
+	}))
+
+	mm := metadataMapper{
+		config: &notifierConfig{
+			mappingURL: mappingServer.URL,
+		},
+	}
+
+	w := httptest.NewRecorder()
+
+	req, err := http.NewRequest("POST", "test-url", nil)
+	if err != nil {
+		t.Fatalf("[%v]", err)
+	}
+
+	mm.handleReload(w, req)
+
+	if w.Code != 200 {
+		t.Errorf("Expected status code: [%d]. Actual: [%d]", 200, w.Code)
+		return
+	}
+
+	if len(mm.mappings) != len(testCases) {
+		t.Errorf("Expected mapping size: [%d]. Actual: [%d]", len(testCases), len(mm.mappings))
+	}
+
+	for _, tc := range testCases {
+		if _, ok := mm.mappings[tc.mappingKey]; !ok {
+			t.Errorf("Mapping key not found [%s]. Testcase: [%+v]", tc.mappingKey, tc.body)
+		} else {
+			if mm.mappings[tc.mappingKey].ID != tc.mappingID {
+				t.Errorf("Expected mapping ID: [%s]. Actual mapping ID: [%s]. Testcase: [%+v]",
+					tc.mappingID, mm.mappings[tc.mappingKey].ID, tc.body)
+			}
+			if mm.mappings[tc.mappingKey].Taxonomy != tc.mappingTaxonomy {
+				t.Errorf("Expected mapping taxonomy: [%s]. Actual mapping taxonomy: [%s]. Testcase: [%+v]",
+					tc.mappingTaxonomy, mm.mappings[tc.mappingKey].Taxonomy, tc.body)
+			}
+		}
+	}
+}
+
+func TestHandleReload_ErrorOnMappingServerRequest(t *testing.T) {
+	mappingServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+	}))
+
+	mm := metadataMapper{
+		config: &notifierConfig{
+			mappingURL: mappingServer.URL,
+		},
+	}
+
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest("POST", "test-url", nil)
+	if err != nil {
+		t.Fatalf("[%v]", err)
+	}
+	mm.handleReload(w, req)
+	if w.Code != 500 {
+		t.Errorf("Expected status code: [%d]. Actual: [%d]", 500, w.Code)
 	}
 }

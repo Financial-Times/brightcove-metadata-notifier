@@ -1,3 +1,4 @@
 .idea
 brightcove-metadata-notifier
 brightcove-metadata-notifier.exe
+*.iml
