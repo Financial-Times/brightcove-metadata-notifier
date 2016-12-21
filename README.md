@@ -1,4 +1,4 @@
-# brightcove-metadata-mapper
+# Brightcove Metadata Notifier (also called brightcover metadata mapper)
 [![Coverage Status](https://coveralls.io/repos/github/Financial-Times/brightcove-metadata-notifier/badge.svg?branch=master)](https://coveralls.io/github/Financial-Times/brightcove-metadata-notifier?branch=master)
 [![Circle CI](https://circleci.com/gh/Financial-Times/brightcove-metadata-notifier/tree/master.png?style=shield)](https://circleci.com/gh/Financial-Times/brightcove-metadata-notifier/tree/master)
 
